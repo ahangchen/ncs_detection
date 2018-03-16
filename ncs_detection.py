@@ -98,14 +98,6 @@ def label_prepare(PATH_TO_LABELS, NUM_CLASSES):
     return category_index
 
 
-def result_process(total_cnt, dataset_pref):
-    os.system('rm %s_out/*' % dataset_pref)
-    os.system('mkdir %s_out' % dataset_pref)
-    for i, image_name in enumerate(sorted(os.listdir(dataset_pref + '_tmp'))):
-        shutil.copy(('%s_tmp/' % dataset_pref) + image_name, '%s_out/%08d.jpg' % (dataset_pref, i))
-    write('total_cnt.txt', '%s\n' % total_cnt)
-
-
 def predict_filter(predictions, score_thresh):
     num = 0
     boxes = list()
@@ -133,8 +125,7 @@ def count_for_video_ncs(img_dir='r10', start_index=0, end_index=2000):
     device = ncs_prepare()
     detection_graph = graph_prepare(PATH_TO_CKPT, device)
     category_index = label_prepare(PATH_TO_LABELS, NUM_CLASSES)
-    
-    total_cnt = 0
+
     for image_path in TEST_IMAGE_PATHS:
         if not os.path.exists(image_path):
             continue
@@ -144,7 +135,7 @@ def count_for_video_ncs(img_dir='r10', start_index=0, end_index=2000):
         score_thresh = 0.6
 
         num, valid_boxes, valid_classes, valid_scores = predict_filter(predictions, score_thresh)
-        total_cnt += num
+
         add_str_on_img(image_np, num)
         if num > 0:
             result = vis_util.visualize_boxes_and_labels_on_image_array(
@@ -163,8 +154,6 @@ def count_for_video_ncs(img_dir='r10', start_index=0, end_index=2000):
                             cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR))
         print '%s object: %d' % (image_path, num)
 
-
-    result_process(total_cnt, dataset_pref)
     ncs_clean(detection_graph, device)
 
 
